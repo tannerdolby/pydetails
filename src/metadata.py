@@ -43,7 +43,7 @@ class PyDetails:
             self.url = url
         
         attr_re = r'="(.*)"'
-        attr_type_re = rf'(property=".+?"|name=".+?"|http-equiv=".+?")'
+        attr_type_re = rf'(property=".+?"|name=".+?")'
         content_re = rf'content{attr_re}'
         host_re = r"https:\/\/(.*\.\w+)"
         unsecure_host_re = r"http:\/\/(.*\.\w+)"
@@ -66,9 +66,9 @@ class PyDetails:
                     if tag_type in ["viewport", "X-UA-Compatible"]:
                         continue
                     if tag_type == "description":
-                        self.doc["description"] = tag(search_match(content_re, match), match.group(0))
+                        self.doc["description"] = TagInfo(search_match(content_re, match), match.group(0))
 
-                    self.doc["meta"][tag_type] = tag(search_match(content_re, match), match.group(0))
+                    self.doc["meta"][tag_type] = TagInfo(search_match(content_re, match), match.group(0))
 
                 self.tokenized.append(MetaTagToken("meta", match.group(0), match.start(), match.end()))
             
@@ -213,12 +213,6 @@ class PyDetails:
         }
         </style>
         '''
-
-def tag(content: str, html: str) -> TagInfo:
-    """
-    Create a new instance of `TagInfo`.
-    """
-    return TagInfo(content, html)
 
 def elem_regex(head: str, tail: str=None) -> str:
     """
