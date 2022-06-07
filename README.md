@@ -44,7 +44,7 @@ page = PyDetails("https://tannerdolby.com")
 print(page.render_card("twitter", page.get_details()))
 ```
 
-generates the following card HTML:
+generating the following card HTML:
 
 ```html
 <style>
