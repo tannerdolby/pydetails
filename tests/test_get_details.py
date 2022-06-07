@@ -1,9 +1,8 @@
 from src.metadata import PyDetails
 
-page = PyDetails("https://tannerdolby.com")
-
 def test_get_details():
+    page = PyDetails("https://tannerdolby.com")
     doc = page.get_details()
-    print(doc)
-    pass
+    
+    assert doc.get("title").content == "Tanner Dolby"
    

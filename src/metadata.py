@@ -1,5 +1,7 @@
 """
-A module for displaying social share cards for a given webpage.
+A module for fetching document metadata from a webpage 
+and provides the utility to display social share cards via 
+generated HTML.
 """
 
 from typing import NamedTuple, Match
