@@ -1,13 +1,23 @@
-from typing import TypeVar, NamedTuple, Match, Dict, List
+"""
+A module for displaying social share cards for a given webpage.
+"""
+
+from typing import NamedTuple, Match
 from collections import defaultdict
-import requests
 import re
+import requests
 
 class TagInfo(NamedTuple):
+    """
+    Represents <meta> tag matches from document metadata.
+    """
     content: str
     html: str
 
 class MetaTagToken(NamedTuple):
+    """
+    Represents the tokenized <meta> tag matches.
+    """
     element: str
     match: str
     start: int
@@ -26,25 +36,59 @@ class PyDetails:
         self.tokenized = []
 
     def get(self, key: str):
+        """
+        Helper function to perform a lookup in the `doc` table.
+        """
         if key in self.doc:
             return self.doc[key]
         if key in self.doc["meta"]:
             return self.doc["meta"][key]
         return ""
 
+    def match_metatags(self, html: str) -> None:
+        """
+        Iterate over all the <meta> tag matches within <head> and store them in `doc`.
+        """
+        attr_re = r'="(.*)"'
+        attr_type_re = r'(property=".+?"|name=".+?")'
+        content_re = rf'content{attr_re}'
+
+        for match in re.finditer(r"<meta\s.*?\>", html):
+            if not match:
+                continue
+
+            metatag = re.search(attr_type_re, match.group(0))
+
+            if not metatag:
+                continue
+
+            if re.search(attr_type_re, match.group(0)):
+                tag_type = re.search(attr_re, metatag.group(1)).group(1)
+
+                if tag_type == "description":
+                    self.doc["description"] = TagInfo(
+                        search_match(content_re, match),
+                        match.group(0)
+                    )
+
+                self.doc["meta"][tag_type] = TagInfo(
+                    search_match(content_re, match),
+                    match.group(0)
+                )
+
+            self.tokenized.append(MetaTagToken("meta", match.group(0), match.start(), match.end()))
+
     def get_details(self, url=None) -> dict:
         """
-        Fetch page metadata details.
+        Fetches metadata details for a webpage. Defaults to fetching 
+        from `self.url` if the `url` parameter is not specified.
         """
         if not self.url and not url:
             return {}
-        
+
         if not self.url and url is not None:
             self.url = url
-        
-        attr_re = r'="(.*)"'
-        attr_type_re = rf'(property=".+?"|name=".+?")'
-        content_re = rf'content{attr_re}'
+
         host_re = r"https:\/\/(.*\.\w+)"
         unsecure_host_re = r"http:\/\/(.*\.\w+)"
 
@@ -56,22 +100,9 @@ class PyDetails:
             self.doc["meta"] = {}
             self.tokenized.append(title)
 
-            # iterate over all the <meta> tag matches in <head> and store them in the table
-            for match in re.finditer(r"<meta\s.*?\>", html):
-                if not match: continue
-                metatag = re.search(attr_type_re, match.group(0))
-                if not metatag: continue
-                if re.search(attr_type_re, match.group(0)):
-                    tag_type = re.search(attr_re, metatag.group(1)).group(1)
-                    if tag_type in ["viewport", "X-UA-Compatible"]:
-                        continue
-                    if tag_type == "description":
-                        self.doc["description"] = TagInfo(search_match(content_re, match), match.group(0))
+            # collect_metatags
+            self.match_metatags(html)
 
-                    self.doc["meta"][tag_type] = TagInfo(search_match(content_re, match), match.group(0))
-
-                self.tokenized.append(MetaTagToken("meta", match.group(0), match.start(), match.end()))
-            
             twitter_url = self.get("twitter:url")
             og_url = self.get("og:url")
             twitter_img = self.get("twitter:image")
@@ -88,7 +119,7 @@ class PyDetails:
 
             if ssl_url:
                 ssl_url = ssl_url.group(1)
-            
+
             if non_ssl_url:
                 non_ssl_url = non_ssl_url.group(1)
 
@@ -99,35 +130,42 @@ class PyDetails:
 
         print(self.doc["meta"].keys())
         return self.doc
-    
+
     def get_content(self, key: str):
         """
         Perform a lookup on the `doc` table and return the element content
         from a `TagInfo` object.
         """
         def helper():
-            if type(self.doc[key]) == TagInfo:
+            if isinstance(self.doc[key]) == TagInfo:
                 return self.doc[key].content
             return self.doc[key]
 
         if key in self.doc:
             return helper()
-        elif key in self.doc["meta"]:
+
+        if key in self.doc["meta"]:
             return helper()
-        else:
-            return ""
+
+        return ""
 
 
     def render_card(self, card_type: str, doc: dict):
+        """
+        Generate HTML and styles for a social share card of type `card_type`.
+        """
+        if not doc:
+            doc = self.doc
+
         return f'''
         {self.get_style()}
-        <a class="card-link" href="{self.doc["url"]}" aria-label="Link to website">
+        <a class="card-link" href="{doc["url"]}" aria-label="Link to website">
             <div class="card {card_type}">
                 <img src="{self.get_content("image")}" alt="{self.get_content("image_alt")}" />
                 <div>
                     <h2>{self.get_content("title")}</h2>
                     <p>{self.get_content("description")}</p>
-                    <p>{self.doc["display_url"]}</p>
+                    <p>{doc["display_url"]}</p>
                 </div>
             </div>
         </a>
@@ -223,17 +261,17 @@ def elem_regex(head: str, tail: str=None) -> str:
 
     return rf"<{head}>(.*)<\/{tail}>"
 
-def search_match(regex: str, m: Match):
+def search_match(regex: str, match: Match):
     """
     Helper to search a match object and return second group match
     """
-    return re.search(regex, m.group(0)).group(1)
-    
+    return re.search(regex, match.group(0)).group(1)
+
 # pydetail = PyDetails("https://developer.mozilla.org/en-US/")
 # pydetail = PyDetails("https://11ty.dev")
 # pydetail = PyDetails("https://www.zachleat.com/web/lighthouse-in-footer/")
-# pydetail = PyDetails("https://tannerdolby.com")
+pydetail = PyDetails("https://tannerdolby.com")
 # pydetail = PyDetails("https://chriscoyier.net/2022/06/04/silence-unknown-callers/")
-# print(pydetail.doc)
-
+print(pydetail.get_details())
+print(pydetail.get("twitter:card").content)
 # print(pydetail.render_card("twitter", pydetail.get_details()))
