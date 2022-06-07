@@ -1,5 +1,9 @@
 # pydetails
-Fetch a URL and return the pages document metadata in a dictionary along with the option to render HTML previews of social share cards. The `doc` field on new instances of `PyDetails` represents the metadata table consisting of `<meta>` tags and document metadata from the `<head>` of a webpage. The class instance provides two main functionalites, `get_details` to populate the metadata table in `self.doc` and `render_card` to render social share card HTML for quick page previews.
+Fetch a URL and return the pages document metadata in a dictionary along with the option to render HTML previews of social share cards. The `doc` field on new instances of `PyDetails` represents the metadata table consisting of `<meta>` tags and document metadata from the `<head>` of a webpage. 
+
+The class instance provides two main functionalites:
+- `get_details` - populate the metadata table.
+- `render_card` - render social share card HTML for quick page previews.
 
 _Note: logic still a work in progress, utility works best on URLs with "well-formatted" document metadata in the `<head>`_
 
