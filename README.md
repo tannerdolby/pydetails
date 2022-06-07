@@ -14,7 +14,6 @@ page = PyDetails("https://tannerdolby.com")
 
 print(page.get_details())
 
-defaultdict(<class 'dict'>,
 {
     'title': TagInfo(content='Tanner Dolby', html='<title>Tanner Dolby</title>'),
     'description': TagInfo(content="Hi, I'm Tanner. A software engineer and mathematician with a passion for building things for the web.", html='<meta name="description" content="Hi, I\'m Tanner. A software engineer and mathematician with a passion for building things for the web.">'), 
