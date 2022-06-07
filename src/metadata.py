@@ -154,7 +154,7 @@ class PyDetails:
         from a `TagInfo` object.
         """
         if key in self.doc:
-            if isinstance(self.doc[key]) == TagInfo:
+            if isinstance(self.doc[key], TagInfo):
                 return self.doc[key].content
             
             return self.get(key).content
@@ -286,8 +286,8 @@ def search_match(regex: str, match: Match):
 # pydetail = PyDetails("https://developer.mozilla.org/en-US/")
 # pydetail = PyDetails("https://11ty.dev")
 # pydetail = PyDetails("https://www.zachleat.com/web/lighthouse-in-footer/")
-pydetail = PyDetails("https://tannerdolby.com")
+# pydetail = PyDetails("https://tannerdolby.com")
 # pydetail = PyDetails("https://chriscoyier.net/2022/06/04/silence-unknown-callers/")
-print(pydetail.get_details())
+# print(pydetail.get_details())
 # print(pydetail.get("twitter:card").content)
 # print(pydetail.render_card("twitter", pydetail.get_details()))
