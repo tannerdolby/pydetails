@@ -34,7 +34,7 @@ class PyDetails:
     def __init__(self, page_url: str=None, request_headers: dict=None):
         self.url= page_url
         self.headers = request_headers or {'Content-Type': 'text/html', 'accept': 'text/html'}
-        self.doc = defaultdict(dict)
+        self.doc = dict()
         self.tokenized = []
 
     def get(self, key: str):
@@ -113,6 +113,8 @@ class PyDetails:
             self.doc["image_alt"] = ""
             self.doc["url"] = ""
             self.doc["display_url"] = ""
+            self.doc["twitter"] = {}
+            self.doc["open_graph"] = {}
 
             self.tokenized.append(title)
 
@@ -144,8 +146,6 @@ class PyDetails:
         except Exception as exc:
             print(f"Error fetching '{self.url}' - {exc}'")
 
-        print(self.doc["twitter"].keys())
-        print(self.doc["open_graph"].keys())
         return self.doc
 
     def get_content(self, key: str):
@@ -286,8 +286,8 @@ def search_match(regex: str, match: Match):
 # pydetail = PyDetails("https://developer.mozilla.org/en-US/")
 # pydetail = PyDetails("https://11ty.dev")
 # pydetail = PyDetails("https://www.zachleat.com/web/lighthouse-in-footer/")
-# pydetail = PyDetails("https://tannerdolby.com")
+pydetail = PyDetails("https://tannerdolby.com")
 # pydetail = PyDetails("https://chriscoyier.net/2022/06/04/silence-unknown-callers/")
-# print(pydetail.get_details())
+print(pydetail.get_details())
 # print(pydetail.get("twitter:card").content)
 # print(pydetail.render_card("twitter", pydetail.get_details()))
