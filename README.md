@@ -31,8 +31,6 @@ Or define an instance of PyDetails without any parameters in the constructor to 
 page = PyDetails()
 
 print(page.get_details("https://tannerdolby.com"))
-# defaultdict(<class 'dict'>,
-# ...
 ```
 
 ## Preview Social Share Cards
