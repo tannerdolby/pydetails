@@ -41,8 +41,11 @@ class PyDetails:
         """
         if key in self.doc:
             return self.doc[key]
-        if key in self.doc["meta"]:
-            return self.doc["meta"][key]
+        if key in self.doc["twitter"]:
+            return self.doc["twitter"][key]
+        if key in self.doc["open_graph"]:
+            return self.doc["open_graph"][key]
+
         return ""
 
     def match_metatags(self, html: str) -> None:
@@ -70,11 +73,16 @@ class PyDetails:
                         search_match(content_re, match),
                         match.group(0)
                     )
-
-                self.doc["meta"][tag_type] = TagInfo(
-                    search_match(content_re, match),
-                    match.group(0)
-                )
+                elif tag_type.find("twitter:") != -1:
+                    self.doc["twitter"][tag_type] = TagInfo(
+                        search_match(content_re, match),
+                        match.group(0)
+                    )
+                elif tag_type.find("og:") != -1:
+                    self.doc["open_graph"][tag_type] = TagInfo(
+                        search_match(content_re, match),
+                        match.group(0)
+                    )
 
             self.tokenized.append(MetaTagToken("meta", match.group(0), match.start(), match.end()))
 
@@ -96,11 +104,17 @@ class PyDetails:
             html = requests.get(self.url, headers=self.headers).text
             title = re.search(elem_regex("title"), html)
 
+            # init fields to preserve this ordering of keys in `doc`
             self.doc["title"] = TagInfo(title.group(1), title.group(0))
-            self.doc["meta"] = {}
+            self.doc["description"] = ""
+            self.doc["image"] = ""
+            self.doc["image_alt"] = ""
+            self.doc["url"] = ""
+            self.doc["display_url"] = ""
+
             self.tokenized.append(title)
 
-            # collect_metatags
+            # collect_metatags and populate `doc`
             self.match_metatags(html)
 
             twitter_url = self.get("twitter:url")
@@ -128,7 +142,8 @@ class PyDetails:
         except Exception as exc:
             print(f"Error fetching '{self.url}' - {exc}'")
 
-        print(self.doc["meta"].keys())
+        print(self.doc["twitter"].keys())
+        print(self.doc["open_graph"].keys())
         return self.doc
 
     def get_content(self, key: str):
@@ -136,20 +151,17 @@ class PyDetails:
         Perform a lookup on the `doc` table and return the element content
         from a `TagInfo` object.
         """
-        def helper():
+        if key in self.doc:
             if isinstance(self.doc[key]) == TagInfo:
                 return self.doc[key].content
-            return self.doc[key]
+            
+            return self.get(key).content
 
-        if key in self.doc:
-            return helper()
-
-        if key in self.doc["meta"]:
-            return helper()
+        if key in self.doc["twitter"] or key in self.doc["open_graph"]:
+            return self.get(key).content
 
         return ""
-
-
+    
     def render_card(self, card_type: str, doc: dict):
         """
         Generate HTML and styles for a social share card of type `card_type`.
@@ -173,6 +185,8 @@ class PyDetails:
 
     def get_style(self) -> str:
         """Styles for twitter "summary_large_image" cards"""
+        # TODO: Handle "regular" summary images as the below
+        # styling is for summary_large_image twitter cards
         return '''
         <style>
         *,
@@ -263,7 +277,7 @@ def elem_regex(head: str, tail: str=None) -> str:
 
 def search_match(regex: str, match: Match):
     """
-    Helper to search a match object and return second group match
+    Helper to search first group of match object and return second group match.
     """
     return re.search(regex, match.group(0)).group(1)
 
@@ -273,5 +287,5 @@ def search_match(regex: str, match: Match):
 pydetail = PyDetails("https://tannerdolby.com")
 # pydetail = PyDetails("https://chriscoyier.net/2022/06/04/silence-unknown-callers/")
 print(pydetail.get_details())
-print(pydetail.get("twitter:card").content)
+# print(pydetail.get("twitter:card").content)
 # print(pydetail.render_card("twitter", pydetail.get_details()))

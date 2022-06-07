@@ -65,15 +65,15 @@ generating the following card HTML:
 Each social share card will have associated styling generated with it. The specific [styles](/card-styles/) can be viewed from `/card-styles/`.
 
 
-### Preview of cards
+### Card Examples
 HTML rendered in browser for a "twitter" social share card and in particular "summary_large_image" card type:
 
-![browser demo](https://user-images.githubusercontent.com/48612525/172103997-bff16a70-0143-474d-b7cf-137690cd5d4b.png)
+![demo of social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172103997-bff16a70-0143-474d-b7cf-137690cd5d4b.png)
 
 See the [card previews](/previews/) directory for more example cards.
 
 
-## TODO
+## Todo
 - [ ] Support LinkedIn card
 - [ ] Support Facebook card
 
