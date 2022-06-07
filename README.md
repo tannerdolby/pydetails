@@ -44,7 +44,7 @@ page = PyDetails("https://tannerdolby.com")
 print(page.render_card("twitter", page.get_details()))
 ```
 
-generating the following HTML:
+generates the following card HTML:
 
 ```html
 <style>
@@ -62,86 +62,8 @@ generating the following HTML:
 </a>
 ```
 
-The following styles are added above the `<a>` tag when generated:
+Each social share card will have associated styling generated with it. The specific [styles](/card-styles/) can be viewed from `/card-styles/`.
 
-```css
-<style>
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
-}
-
-:root {
-    --twitter-macOS-font: Helvetica Neue, Helvetica;
-    --twitter-windows-font: Segoe UI, Arial;
-}
-
-.card-link {
-    color: inherit;
-    text-decoration: none;
-}
-
-.twitter {
-    font-family: var(--twitter-macOS-font, sans-serif);
-}
-
-.card {
-    display: flex;
-    flex-direction: column;
-    max-width: 35ch;
-    border: 1px solid lightgray;
-    border-radius: 10px;
-    font-size: clamp(.9rem, 3vw, 1rem);
-}
-
-.card div {
-    padding: 10px 10px;
-    margin: 0 auto;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    width: 100%;
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
-}
-
-.card h2,
-.card div p {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.card h2 {
-    font-size: clamp(.9rem, 1vw, 1rem);
-    margin: 0 0 5px 0;
-}
-
-.card div p {
-    font-size: 14px;
-    margin: 0;
-}
-
-.card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    min-height: 210px;
-    max-height: 215px;
-    border-top-left-radius: 10px;
-    border-top-right-radius: 10px;
-}
-
-.card h2 + p {
-    margin: 4px 0;
-}
-
-.card p:last-child {
-    margin-top: 6px;
-    color: #888;
-}
-</style>
-```
 
 ### Preview of cards
 HTML rendered in browser for a "twitter" social share card and in particular "summary_large_image" card type:
