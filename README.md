@@ -1,9 +1,9 @@
 # pydetails
-Fetch a URL and return the pages document metadata in a dictionary along with the option to render HTML previews of social share cards. The `doc` field on new instances of `PyDetails` represents the metadata table consisting of `<meta>` tags and document metadata from the `<head>` of a webpage. 
+Fetch a URL and return the pages document metadata in a dictionary along with methods to render HTML previews of social share cards. The `doc` field on new instances of `PyDetails` represents the metadata table consisting of `<meta>` tags and document metadata from the `<head>` of a webpage. 
 
-The class instance provides two main functionalites:
-- `get_details` - populate the metadata table.
-- `render_card` - render social share card HTML for quick page previews.
+Two main functionalites on instances of `PyDetails`:
+1. `get_details` - populate the metadata table.
+2. `render_card` - render social share card HTML for quick page previews.
 
 _Note: logic still a work in progress, utility works best on URLs with "well-formatted" document metadata in the `<head>`_
 
@@ -13,7 +13,6 @@ _Note: logic still a work in progress, utility works best on URLs with "well-for
 page = PyDetails("https://tannerdolby.com")
 
 print(page.get_details())
-
 {
     'title': TagInfo(content='Tanner Dolby', html='<title>Tanner Dolby</title>'),
     'description': TagInfo(content="Hi, I'm Tanner. A software engineer and mathematician with a passion for building things for the web.", html='<meta name="description" content="Hi, I\'m Tanner. A software engineer and mathematician with a passion for building things for the web.">'), 
@@ -45,7 +44,7 @@ page = PyDetails("https://tannerdolby.com")
 print(page.render_card("twitter", page.get_details()))
 ```
 
-generating the following card HTML:
+Generates the following card HTML:
 
 ```html
 <style>
@@ -63,16 +62,16 @@ generating the following card HTML:
 </a>
 ```
 
-Each social share card will have associated styling generated with it. The specific [styles](/card-styles/) can be viewed from `/card-styles/`.
-
-
 ### Card Examples
-HTML rendered in browser for a "twitter" social share card and in particular "summary_large_image" card type:
+Each social share card will have associated styling generated with it. The specific [styles](/card-styles/) can be viewed from `/card-styles/`. See the [card previews](/previews/) directory for more example cards.
 
-![demo of social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172103997-bff16a70-0143-474d-b7cf-137690cd5d4b.png)
+#### Twitter - summary_large_image
 
-See the [card previews](/previews/) directory for more example cards.
+![demo of summary_large_image social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172772251-0ce67f77-95eb-4e70-813d-544de1fd59e9.png)
 
+#### Twitter - summary
+
+![demo of summary social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172772628-93776dc3-eeef-467d-9627-0a7638f2fd00.png)
 
 ## Todo
 - [ ] Support LinkedIn card
