@@ -16,7 +16,7 @@ class TagInfo(NamedTuple):
     content: str
     html: str
 
-class MetaTagToken(NamedTuple):
+class TagToken(NamedTuple):
     """
     Represents the tokenized <meta> tag matches.
     """
@@ -70,7 +70,7 @@ class PyDetails:
             if re.search(attr_type_re, match.group(0)):
                 tag_type = re.search(attr_re, metatag.group(1)).group(1)
 
-                if tag_type == "description":
+                if tag_type in ["description", "og:description", "twitter:description"]:
                     self.doc["description"] = TagInfo(
                         search_match(content_re, match),
                         match.group(0)
@@ -86,11 +86,11 @@ class PyDetails:
                         match.group(0)
                     )
 
-            self.tokenized.append(MetaTagToken("meta", match.group(0), match.start(), match.end()))
+            self.tokenized.append(TagToken("meta", match.group(0), match.start(), match.end()))
 
     def get_details(self, url=None) -> dict:
         """
-        Fetches metadata details for a webpage. Defaults to fetching 
+        Fetch document metadata details. Defaults to fetching 
         from `self.url` if the `url` parameter is not specified.
         """
         if not self.url and not url:
@@ -150,123 +150,85 @@ class PyDetails:
 
     def get_content(self, key: str):
         """
-        Perform a lookup on the `doc` table and return the element content
+        Perform a lookup on the `doc` table and return the content
         from a `TagInfo` object.
         """
         if key in self.doc:
             if isinstance(self.doc[key], TagInfo):
                 return self.doc[key].content
-            
-            return self.get(key).content
+            return self.doc[key]
 
-        if key in self.doc["twitter"] or key in self.doc["open_graph"]:
-            return self.get(key).content
+        # if key exists and corresponds to a TagInfo instance, then get the contents
+        if key in self.doc["twitter"] and isinstance(self.doc["twitter"][key], TagInfo):
+            return self.doc["twitter"][key].content
+
+        if key in self.doc["open_graph"] and isinstance(self.doc["open_graph"][key], TagInfo):
+            return self.doc["open_graph"][key].content
 
         return ""
     
-    def render_card(self, card_type: str, doc: dict):
+    def build_card(self, card_type: str, doc: dict):
         """
         Generate HTML and styles for a social share card of type `card_type`.
         """
         if not doc:
             doc = self.doc
 
-        return f'''
-        {self.get_style()}
-        <a class="card-link" href="{doc["url"]}" aria-label="Link to website">
-            <div class="card {card_type}">
-                <img src="{self.get_content("image")}" alt="{self.get_content("image_alt")}" />
-                <div>
-                    <h2>{self.get_content("title")}</h2>
-                    <p>{self.get_content("description")}</p>
-                    <p>{doc["display_url"]}</p>
-                </div>
-            </div>
-        </a>
-        '''
-
-    def get_style(self) -> str:
-        """Styles for twitter "summary_large_image" cards"""
-        # TODO: Handle "regular" summary images as the below
-        # styling is for summary_large_image twitter cards
-        return '''
-        <style>
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
+        card_styles= {
+            "summary": {
+                "css": "twitter-summary-image.css",
+                "html": f'''
+                <a href="{doc["url"]}">
+                    <div class="card {card_type}">
+                        <img src="{self.get_content("image")}" alt="{self.get_content("image_alt")}" />
+                        <div>
+                            <p>{doc["display_url"]}</p>
+                            <h2>{self.get_content("title")}</h2>
+                            <p>{self.get_content("description")}</p>
+                        </div>
+                    </div>
+                </a>
+                '''
+            },
+            "summary_large_image": {
+                "css": "twitter-summary-large-image.css",
+                "html": f'''
+                <a class="card-link" href="{doc["url"]}" aria-label="Link to website">
+                    <div class="card {card_type}">
+                        <img src="{self.get_content("image")}" alt="{self.get_content("image_alt")}" />
+                        <div>
+                            <h2>{self.get_content("title")}</h2>
+                            <p>{self.get_content("description")}</p>
+                            <p>{doc["display_url"]}</p>
+                        </div>
+                    </div>
+                </a>
+                '''
+            },
+            # TODO: LinkedIn and Facebook cards
         }
 
-        :root {
-            --twitter-macOS-font: Helvetica Neue, Helvetica;
-            --twitter-windows-font: Segoe UI, Arial;
-        }
+        css = html = ""
+        twitter_card_type = self.get_content("twitter:card")
+        
+        # compare card_type and get the correct html/css
+        if card_type == "twitter" and twitter_card_type in card_styles:
+            css = self.get_style(card_styles[twitter_card_type].get("css"))
+            html = card_styles[twitter_card_type].get("html")
 
-        .card-link {
-            color: inherit;
-            text-decoration: none;
-        }
+        elif card_type == "twitter" and twitter_card_type not in card_styles:
+            # default to twitter:card = summary if a 
+            # <meta name="twitter:card" /> tag isn't specified.
+            css = self.get_style(card_styles["summary"].get("css"))
+            html = card_styles["summary"].get("html")
+        
+        return f'''<style>\n{css}\n</style>\n{html}'''
 
-        .twitter {
-            font-family: var(--twitter-macOS-font, sans-serif);
-        }
+    def get_style(self, stylesheet: str) -> str:
+        """Read a stylesheets contents from card-styles directory."""
+        with open(f"./card-styles/{stylesheet}", 'rt') as file:
+            return file.read()
 
-        .card {
-            display: flex;
-            flex-direction: column;
-            max-width: 35ch;
-            border: 1px solid lightgray;
-            border-radius: 10px;
-            font-size: clamp(.9rem, 3vw, 1rem);
-        }
-
-        .card div {
-            padding: 10px 10px;
-            margin: 0 auto;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            width: 100%;
-            border-bottom-left-radius: 10px;
-            border-bottom-right-radius: 10px;
-        }
-
-        .card h2,
-        .card div p {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .card h2 {
-            font-size: clamp(.9rem, 1vw, 1rem);
-            margin: 0 0 5px 0;
-        }
-
-        .card div p {
-            font-size: 14px;
-            margin: 0;
-        }
-
-        .card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            min-height: 210px;
-            max-height: 215px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
-
-        .card h2 + p {
-            margin: 4px 0;
-        }
-
-        .card p:last-child {
-            margin-top: 6px;
-            color: #888;
-        }
-        </style>
-        '''
 
 def elem_regex(head: str, tail: str=None) -> str:
     """
@@ -286,8 +248,11 @@ def search_match(regex: str, match: Match):
 # pydetail = PyDetails("https://developer.mozilla.org/en-US/")
 # pydetail = PyDetails("https://11ty.dev")
 # pydetail = PyDetails("https://www.zachleat.com/web/lighthouse-in-footer/")
-pydetail = PyDetails("https://tannerdolby.com")
+# pydetail = PyDetails("https://tannerdolby.com")
 # pydetail = PyDetails("https://chriscoyier.net/2022/06/04/silence-unknown-callers/")
-print(pydetail.get_details())
+# doc = pydetail.get_details()
+# print(pydetail.get_details())
+# print(doc["twitter"].keys())
+# print(pydetail.get_style("twitter-summary-large-image.css"))
 # print(pydetail.get("twitter:card").content)
-# print(pydetail.render_card("twitter", pydetail.get_details()))
+# print(pydetail.build_card("twitter", pydetail.get_details()))
