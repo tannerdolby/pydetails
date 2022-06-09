@@ -66,7 +66,7 @@ Each social share card will have associated styling generated with it. The speci
 
 #### Twitter - summary
 
-![demo of summary social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172773893-ac8af35a-119f-4938-9877-a7aa4a223b64.png)
+![demo of summary social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172774633-fd293ae1-da17-4f4c-ae31-730584fc5a9e.png)
 
 ## Todo
 - [ ] Support LinkedIn card
