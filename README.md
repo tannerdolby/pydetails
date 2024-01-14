@@ -1,5 +1,5 @@
-# pydetails
-Fetch a URL and return the pages document metadata in a dictionary along with methods to render HTML previews of social share cards. The `doc` field on new instances of `PyDetails` represents the metadata table consisting of `<meta>` tags and document metadata from the `<head>` of a webpage. 
+# PyDetails
+Preview a websites social share card. Fetch a URL and get the sites document metadata in a dictionary along with methods to render HTML previews of social share cards. The `doc` class field on instances of `PyDetails` represents the metadata dictionary consisting of `<meta>` tags and document metadata from the `<head>` of the requested webpage.
 
 _Note: still a work in progress, utility works best on URLs with "well-formatted" document metadata in the `<head>`_
 
@@ -29,9 +29,7 @@ print(page.get_details("https://tannerdolby.com"))
 ```
 
 ## Preview Social Share Cards
-Generate social share card HTML for quick page previews.
-
-Use `build_card(card_name, doc)` to generate HTML for specific social share cards. The following represents a "twitter" card:
+Generate social share card HTML for quick page previews. Use the `build_card()` class method to output HTML for previewing cards. The following creates Open Graph and  a "twitter" card:
 
 ```python
 page = PyDetails("https://tannerdolby.com")
@@ -58,16 +56,17 @@ Generates the following card HTML:
 ```
 
 ### Card Examples
-Each social share card will have associated styling generated with it. The specific [styles](/card-styles/) can be viewed from `/card-styles/`. See the [card previews](/previews/) directory for more example cards.
-
-#### Twitter - summary_large_image
-
-![demo of summary_large_image social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172774019-5dfb8c97-9b1e-4188-8819-9f144490102f.png)
+See the [card previews](/previews/) directory for more examples.
 
 #### Twitter - summary
 
 ![demo of summary social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172774633-fd293ae1-da17-4f4c-ae31-730584fc5a9e.png)
 
-## Todo
-- [ ] Support LinkedIn card
-- [ ] Support Facebook card
+#### Twitter - summary_large_image
+
+![demo of summary_large_image social share twitter card for tannerdolby.com](https://user-images.githubusercontent.com/48612525/172774019-5dfb8c97-9b1e-4188-8819-9f144490102f.png)
+
+## Resources
+- [The Open Graph Protocol](https://ogp.me/)
+- [Make your website shareable on LinkedIn](https://www.linkedin.com/help/linkedin/answer/a521928)
+- [Twitter Card](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/markup)

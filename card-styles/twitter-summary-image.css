@@ -42,6 +42,8 @@ a {
     white-space: nowrap;
     font-size: clamp(.8rem, 1vw, 1rem);
     margin: 0px 0 5px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .card div p {
