@@ -25,14 +25,19 @@ class TagToken(NamedTuple):
     start: int
     end: int
 
+# TODO: Create previews for:
+# twitter summary card and twitter summary large
+# linkedin
+# facebook
 class PyDetails:
     """
     Class representing document metadata details for a given URL.
     """
     doc: dict[str, TagInfo]
 
-    def __init__(self, page_url: str=None, request_headers: dict=None):
-        self.url= page_url
+    def __init__(self, url: str=None, card_type: str=None, request_headers: dict=None):
+        self.url= url
+        self.card_type = card_type or 'twitter_summary'
         self.headers = request_headers or {'Content-Type': 'text/html', 'accept': 'text/html'}
         self.doc = dict()
         self.tokenized = []
@@ -106,16 +111,15 @@ class PyDetails:
             html = requests.get(self.url, headers=self.headers).text
             title = re.search(elem_regex("title"), html)
 
-            # init fields to preserve this ordering of keys in `doc`
+            # define fields to preserve this ordering of keys in `doc`
             self.doc["title"] = TagInfo(title.group(1), title.group(0))
             self.doc["description"] = ""
             self.doc["image"] = ""
             self.doc["image_alt"] = ""
             self.doc["url"] = ""
             self.doc["display_url"] = ""
-            self.doc["twitter"] = {}
-            self.doc["open_graph"] = {}
-
+            self.doc["twitter"] = dict()
+            self.doc["open_graph"] = dict()
             self.tokenized.append(title)
 
             # collect_metatags and populate `doc`
@@ -132,19 +136,19 @@ class PyDetails:
             self.doc["image_alt"] = twitter_img_alt or og_img_alt
             self.doc["url"] = self.url or twitter_url.content or og_url.content
 
-            ssl_url = re.search(host_re, self.doc["url"])
-            non_ssl_url = re.search(unsecure_host_re, self.doc["url"])
+            https_url = re.search(host_re, self.doc["url"])
+            http_url = re.search(unsecure_host_re, self.doc["url"])
 
-            if ssl_url:
-                ssl_url = ssl_url.group(1)
+            if https_url:
+                https_url = https_url.group(1)
 
-            if non_ssl_url:
-                non_ssl_url = non_ssl_url.group(1)
+            if http_url:
+                http_url = http_url.group(1)
 
-            self.doc["display_url"] = ssl_url or non_ssl_url
+            self.doc["display_url"] = https_url or http_url
 
         except Exception as exc:
-            print(f"Error fetching '{self.url}' - {exc}'")
+            print(f"Error fetching '{self.doc.url}' - {exc}'")
 
         return self.doc
 
@@ -166,61 +170,48 @@ class PyDetails:
             return self.doc["open_graph"][key].content
 
         return ""
+
+    def card_html(self):
+        card_type = self.card_type
+        title = self.get_content("title")
+        desc = self.get_content("description")
+        url = self.get_content("url")
+        image = self.get_content("image")
+        image_alt = self.get_content("image_alt")
+
+        return (
+            f'<a class="card-link" href="{url}" aria-label="Link to website">\n\t'
+            f'<div class="card {card_type}">\n\t'
+            f'<img src="{image}" alt="{image_alt or "Missing image"}" />\n\t'
+            '<div>\n\t'
+            f'<p>{url}</p>\n\t'
+            f'<p>{title}</p>\n\t'
+            f'<p>{desc}</p>\n\t'
+            '</div>\n\t'
+            '</div>\n'
+            '</a>'
+        )
     
-    def build_card(self, card_type: str, doc: dict):
+    def build_card(self):
         """
         Generate HTML and styles for a social share card of type `card_type`.
         """
-        if not doc:
-            doc = self.doc
+
+        self.get_details()
 
         card_styles= {
-            "summary": {
+            "twitter_summary": {
                 "css": "twitter-summary-image.css",
-                "html": f'''
-                <a href="{doc["url"]}">
-                    <div class="card {card_type}">
-                        <img src="{self.get_content("image")}" alt="{self.get_content("image_alt")}" />
-                        <div>
-                            <p>{doc["display_url"]}</p>
-                            <h2>{self.get_content("title")}</h2>
-                            <p>{self.get_content("description")}</p>
-                        </div>
-                    </div>
-                </a>
-                '''
+                "html": self.card_html()
             },
-            "summary_large_image": {
+            "twitter_summary_large": {
                 "css": "twitter-summary-large-image.css",
-                "html": f'''
-                <a class="card-link" href="{doc["url"]}" aria-label="Link to website">
-                    <div class="card {card_type}">
-                        <img src="{self.get_content("image")}" alt="{self.get_content("image_alt")}" />
-                        <div>
-                            <h2>{self.get_content("title")}</h2>
-                            <p>{self.get_content("description")}</p>
-                            <p>{doc["display_url"]}</p>
-                        </div>
-                    </div>
-                </a>
-                '''
+                "html": self.card_html()
             },
-            # TODO: LinkedIn and Facebook cards
         }
 
-        css = html = ""
-        twitter_card_type = self.get_content("twitter:card")
-        
-        # compare card_type and get the correct html/css
-        if card_type == "twitter" and twitter_card_type in card_styles:
-            css = self.get_style(card_styles[twitter_card_type].get("css"))
-            html = card_styles[twitter_card_type].get("html")
-
-        elif card_type == "twitter" and twitter_card_type not in card_styles:
-            # default to twitter:card = summary if a 
-            # <meta name="twitter:card" /> tag isn't specified.
-            css = self.get_style(card_styles["summary"].get("css"))
-            html = card_styles["summary"].get("html")
+        css = self.get_style(card_styles[self.card_type].get("css"))
+        html = card_styles[self.card_type].get("html")
         
         return f'''<style>\n{css}\n</style>\n{html}'''
 
@@ -244,15 +235,3 @@ def search_match(regex: str, match: Match):
     Helper to search first group of match object and return second group match.
     """
     return re.search(regex, match.group(0)).group(1)
-
-# pydetail = PyDetails("https://developer.mozilla.org/en-US/")
-# pydetail = PyDetails("https://11ty.dev")
-# pydetail = PyDetails("https://www.zachleat.com/web/lighthouse-in-footer/")
-# pydetail = PyDetails("https://tannerdolby.com")
-# pydetail = PyDetails("https://chriscoyier.net/2022/06/04/silence-unknown-callers/")
-# doc = pydetail.get_details()
-# print(pydetail.get_details())
-# print(doc["twitter"].keys())
-# print(pydetail.get_style("twitter-summary-large-image.css"))
-# print(pydetail.get("twitter:card").content)
-# print(pydetail.build_card("twitter", pydetail.get_details()))
