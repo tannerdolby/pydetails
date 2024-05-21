@@ -1,7 +1,7 @@
 # PyDetails
-Preview a websites social share card. Fetch a URL and get the sites document metadata in a dictionary along with methods to render HTML previews of social share cards. The `doc` class field on instances of `PyDetails` represents the metadata dictionary consisting of `<meta>` tags and document metadata from the `<head>` of the requested webpage.
+Generate Open Graph and Twitter meta tags. Preview a websites social share card. View the sites document metadata and render HTML previews of social share cards.
 
-_Note: still a work in progress, utility works best on URLs with "well-formatted" document metadata in the `<head>`_
+> works best on URLs with "well-formatted" document metadata in the `<head>`
 
 ## Usage
 
@@ -29,12 +29,12 @@ print(page.get_details("https://tannerdolby.com"))
 ```
 
 ## Preview Social Share Cards
-Generate social share card HTML for quick page previews. Use the `build_card()` class method to output HTML for previewing cards. The following creates Open Graph and  a "twitter" card:
+Use the `build_card()` class method to output HTML for previewing cards. The following creates Open Graph and Twitter card info:
 
 ```python
 page = PyDetails("https://tannerdolby.com")
 
-print(page.render_card("twitter", page.get_details()))
+print(page.build_card("twitter", page.get_details()))
 ```
 
 Generates the following card HTML:
@@ -43,20 +43,22 @@ Generates the following card HTML:
 <style>
 ...
 </style>
-<a href="https://tannerdolby.com" aria-label="Link to website">
-    <div class="card twitter">
-        <img src="https://tannerdolby.com/images/arch-spiral-large.jpg" alt="An Archimedean Spiral generated with JavaScript" />
-        <div>
-            <h2>Tanner Dolby</h2>
-            <p>Hi, I'm Tanner. A software engineer and mathematician with a passion for building things for the web.</p>
-            <p>tannerdolby.com</p>
+<a class="card-link" href="https://tannerdolby.com" aria-label="Link to website">
+    <div class="card twitter_summary">
+        <img src="https://tannerdolby.com/images/arch-spiral-large.jpg"
+            alt="An Archimedean Spiral generated with JavaScript" />
+        <div class="card-info">
+            <p class="card-url">tannerdolby.com</p>
+            <p class="card-title">Tanner Dolby</p>
+            <p class="card-desc">Hi, I'm Tanner. A software engineer and mathematician with a passion for building
+                things for the web.</p>
         </div>
     </div>
 </a>
 ```
 
 ### Card Examples
-See the [card previews](/previews/) directory for more examples.
+[card previews](/previews/)
 
 #### Twitter - summary
 

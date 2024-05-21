@@ -162,7 +162,6 @@ class PyDetails:
                 return self.doc[key].content
             return self.doc[key]
 
-        # if key exists and corresponds to a TagInfo instance, then get the contents
         if key in self.doc["twitter"] and isinstance(self.doc["twitter"][key], TagInfo):
             return self.doc["twitter"][key].content
 
@@ -171,22 +170,42 @@ class PyDetails:
 
         return ""
 
-    def card_html(self):
-        card_type = self.card_type
+    def card_html(self, card_type: str=None):
         title = self.get_content("title")
         desc = self.get_content("description")
-        url = self.get_content("url")
+        url = self.get_content("display_url")
         image = self.get_content("image")
         image_alt = self.get_content("image_alt")
+        card_type = card_type or self.card_type
+
+        d = {
+            "twitter_summary": (
+                f'<p class="card-url">{url}</p>\n\t'
+                f'<p class="card-title">{title}</p>\n\t'
+                f'<p class="card-desc">{desc}</p>\n\t'
+            ),
+            "twitter_summary_large": (
+                f'<p class="card-title">{title}</p>\n\t'
+                f'<p class="card-desc">{desc}</p>\n\t'
+                f'<p class="card-url">{url}</p>\n\t'
+            ),
+            "linkedin": (
+                f'<p class="card-title">{title}</p>\n\t'
+                f'<p class="card-url">{url}</p>\n\t'
+            ),
+            "facebook": (
+                f'<p class="card-url">{url}</p>\n\t'
+                f'<p class="card-title">{title}</p>\n\t'
+                f'<p class="card-desc">{desc}</p>\n\t'
+            )
+        }
 
         return (
-            f'<a class="card-link" href="{url}" aria-label="Link to website">\n\t'
+            f'<a class="card-link" href="{self.doc["url"]}" aria-label="Link to website">\n\t'
             f'<div class="card {card_type}">\n\t'
             f'<img src="{image}" alt="{image_alt or "Missing image"}" />\n\t'
-            '<div>\n\t'
-            f'<p>{url}</p>\n\t'
-            f'<p>{title}</p>\n\t'
-            f'<p>{desc}</p>\n\t'
+            '<div class="card-info">\n\t'
+            f'{d[card_type]}'
             '</div>\n\t'
             '</div>\n'
             '</a>'
@@ -197,7 +216,7 @@ class PyDetails:
         Generate HTML and styles for a social share card of type `card_type`.
         """
 
-        self.get_details()
+        self.doc = self.get_details()
 
         card_styles= {
             "twitter_summary": {
@@ -208,12 +227,17 @@ class PyDetails:
                 "css": "twitter-summary-large-image.css",
                 "html": self.card_html()
             },
+            "linkedin": {
+                "css": "linkedin.css",
+                "html": self.card_html()
+            },
         }
 
+        base_css = self.get_style("base.css")
         css = self.get_style(card_styles[self.card_type].get("css"))
         html = card_styles[self.card_type].get("html")
         
-        return f'''<style>\n{css}\n</style>\n{html}'''
+        return f'''<style>\n{base_css + css}\n</style>\n{html}'''
 
     def get_style(self, stylesheet: str) -> str:
         """Read a stylesheets contents from card-styles directory."""
